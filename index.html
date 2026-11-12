@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serverless Task Manager - Capstone POC</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; background: #f4f7f6; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input, button { padding: 10px; font-size: 16px; margin-right: 10px; }
+        input { width: 65%; border: 1px solid #ccc; border-radius: 4px; }
+        button { background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        ul { list-style-type: none; padding: 0; }
+        li { background: #e9ecef; margin-bottom: 8px; padding: 12px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>📝 Serverless Task Manager</h2>
+        <div style="display: flex;">
+            <input type="text" id="taskInput" placeholder="Enter a new task...">
+            <button onclick="createTask()">Add Task</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Your Cloud Tasks</h3>
+        <ul id="taskList">Loading tasks from AWS...</ul>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
