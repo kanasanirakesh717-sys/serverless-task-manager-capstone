@@ -1,38 +1,37 @@
 import json
 import boto3
+import os
 import uuid
 
-# Explicitly bind to us-east-1 where your TaskTable lives
-dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
-table = dynamodb.Table('TaskTable')
+dynamodb = boto3.resource('dynamodb')
+TABLE_NAME = os.environ.get('DYNAMODB_TABLE', 'Tasks')
+table = dynamodb.Table(TABLE_NAME)
 
 def lambda_handler(event, context):
-    print("Received event: ", json.dumps(event))
+    print("Received event:", json.dumps(event))
     
-    # Extract HTTP method supporting both HTTP API v2 and REST API v1 payloads
-    request_context = event.get('requestContext', {})
-    http_info = request_context.get('http', {})
-    http_method = http_info.get('method') or event.get('httpMethod', 'GET')
+    # Support both HTTP API v2 and REST API v1 event payloads
+    http_method = (
+        event.get('requestContext', {}).get('http', {}).get('method') or 
+        event.get('httpMethod')
+    )
     
-    # Standard CORS headers
     headers = {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Methods": "OPTIONS,GET,POST,DELETE"
+        "Access-Control-Allow-Methods": "OPTIONS,GET,POST,PUT,DELETE",
+        "Access-Control-Allow-Headers": "Content-Type"
     }
-    
-    # Handle CORS preflight OPTIONS requests
-    if http_method == 'OPTIONS':
-        return {
-            'statusCode': 200,
-            'headers': headers,
-            'body': json.dumps('CORS preflight check passed')
-        }
-        
+
     try:
-        # GET: Read/List all tasks from DynamoDB
-        if http_method == 'GET':
+        if http_method == 'OPTIONS':
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps('Preflight check successful')
+            }
+            
+        elif http_method == 'GET':
             response = table.scan()
             items = response.get('Items', [])
             return {
@@ -41,16 +40,21 @@ def lambda_handler(event, context):
                 'body': json.dumps(items)
             }
             
-        # POST: Create a new task in DynamoDB
         elif http_method == 'POST':
-            body_str = event.get('body', '{}')
-            body = json.loads(body_str) if body_str else {}
-            task_id = str(uuid.uuid4())[:8]
-            task_title = body.get('title', 'Untitled Task')
+            body_data = event.get('body', '{}')
+            body = json.loads(body_data) if body_data else {}
+            title = body.get('title')
             
+            if not title:
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Task title is required'})
+                }
+                
             item = {
-                'taskid': task_id,  # FIXED: Matches lowercase partition key 'taskid'
-                'title': task_title,
+                'id': str(uuid.uuid4()),
+                'title': title,
                 'status': 'Pending'
             }
             
@@ -58,7 +62,14 @@ def lambda_handler(event, context):
             return {
                 'statusCode': 201,
                 'headers': headers,
-                'body': json.dumps({'message': 'Task created successfully!', 'task': item})
+                'body': json.dumps({'message': 'Task created successfully', 'item': item})
+            }
+            
+        else:
+            return {
+                'statusCode': 405,
+                'headers': headers,
+                'body': json.dumps({'error': f'Method {http_method} not allowed'})
             }
             
     except Exception as e:
@@ -68,4 +79,3 @@ def lambda_handler(event, context):
             'headers': headers,
             'body': json.dumps({'error': str(e)})
         }
-print("Successfully deployed via GitHub Actions CI/CD pipeline!")

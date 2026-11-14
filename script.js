@@ -1,6 +1,20 @@
-// Your live AWS API Gateway Invoke URL
 const API_URL = "https://uxwtug6d8f.execute-api.ap-south-2.amazonaws.com";
 
+// Example fetch request to test the backend
+async function getTasks() {
+    try {
+        const response = await fetch(API_URL, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        const data = await response.json();
+        console.log("Success:", data);
+    } catch (error) {
+        console.error("Error fetching tasks:", error);
+    }
+}
 // 1. Fetch and display tasks from DynamoDB (GET)
 async function fetchTasks() {
     const taskList = document.getElementById("taskList");
