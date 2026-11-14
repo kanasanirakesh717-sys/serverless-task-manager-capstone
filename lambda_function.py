@@ -68,4 +68,4 @@ def lambda_handler(event, context):
             'headers': headers,
             'body': json.dumps({'error': str(e)})
         }
-print("Successfully deployed via GitHub Actions CI/CD pipeline!")
+print("Successfully deployed via GitHub Actions CI/CD pipeline!!")
