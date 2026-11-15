@@ -4,7 +4,8 @@ import os
 import uuid
 
 dynamodb = boto3.resource('dynamodb')
-TABLE_NAME = os.environ.get('DYNAMODB_TABLE', 'TasksTable')
+# Matches your exact DynamoDB table name 'TaskTable'
+TABLE_NAME = os.environ.get('DYNAMODB_TABLE', 'TaskTable')
 table = dynamodb.Table(TABLE_NAME)
 
 def lambda_handler(event, context):
@@ -53,7 +54,7 @@ def lambda_handler(event, context):
                 }
                 
             item = {
-                'taskId': str(uuid.uuid4()),
+                'taskId': str(uuid.uuid4()),  # Matches DynamoDB partition key 'taskId'
                 'title': title,
                 'status': 'Pending'
             }
@@ -63,6 +64,50 @@ def lambda_handler(event, context):
                 'statusCode': 201,
                 'headers': headers,
                 'body': json.dumps({'message': 'Task created successfully', 'item': item})
+            }
+            
+        elif http_method == 'DELETE':
+            body_data = event.get('body', '{}')
+            body = json.loads(body_data) if body_data else {}
+            task_id = body.get('taskId')
+            
+            if not task_id:
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'taskId is required for deletion'})
+                }
+                
+            table.delete_item(Key={'taskId': task_id})
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({'message': 'Task deleted successfully'})
+            }
+            
+        elif http_method == 'PUT':
+            body_data = event.get('body', '{}')
+            body = json.loads(body_data) if body_data else {}
+            task_id = body.get('taskId')
+            status = body.get('status', 'Completed')
+            
+            if not task_id:
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'taskId is required for update'})
+                }
+                
+            table.update_item(
+                Key={'taskId': task_id},
+                UpdateExpression="set #s = :s",
+                ExpressionAttributeNames={'#s': 'status'},
+                ExpressionAttributeValues={':s': status}
+            )
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({'message': 'Task updated successfully'})
             }
             
         else:

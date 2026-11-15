@@ -1,4 +1,4 @@
-name: Deploy Lambda to AWS
+name: Deploy Serverless App to AWS
 
 on:
   push:
@@ -23,13 +23,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-south-2
 
-      - name: Zip Lambda Code
+      - name: Update Lambda Backend Code
         run: |
           zip lambda_payload.zip lambda_function.py
-
-      - name: Update Lambda Function Code
-        run: |
           aws lambda update-function-code \
             --function-name Capstone_code \
             --zip-file fileb://lambda_payload.zip \
             --region ap-south-2
+
+      - name: Deploy Frontend to S3
+        run: |
+          aws s3 sync ./frontend s3://serverless-task-manager-frontend-rakesh --region ap-south-2
