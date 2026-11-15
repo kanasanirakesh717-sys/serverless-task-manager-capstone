@@ -4,7 +4,7 @@ import os
 import uuid
 
 dynamodb = boto3.resource('dynamodb')
-TABLE_NAME = os.environ.get('DYNAMODB_TABLE', 'Tasks')
+TABLE_NAME = os.environ.get('DYNAMODB_TABLE', 'TasksTable')
 table = dynamodb.Table(TABLE_NAME)
 
 def lambda_handler(event, context):
