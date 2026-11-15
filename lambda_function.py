@@ -53,7 +53,7 @@ def lambda_handler(event, context):
                 }
                 
             item = {
-                'id': str(uuid.uuid4()),
+                'taskid': str(uuid.uuid4()),
                 'title': title,
                 'status': 'Pending'
             }
